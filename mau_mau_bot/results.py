@@ -75,8 +75,8 @@ def add_no_game(results):
             "nogame",
             title=_("You are not playing"),
             input_message_content=
-            InputTextMessageContent(_('Not playing right now. Use /new to '
-                                      'start a game or /join to join the '
+            InputTextMessageContent(_('Not playing right now. Use /uno to '
+                                      'start a game or /uno_join to join the '
                                       'current game in this group'))
         )
     )
@@ -89,7 +89,7 @@ def add_not_started(results):
             "nogame",
             title=_("The game wasn't started yet"),
             input_message_content=
-            InputTextMessageContent(_('Start the game with /start'))
+            InputTextMessageContent(_('Start the game with /uno_start'))
         )
     )
 

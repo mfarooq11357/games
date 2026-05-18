@@ -42,6 +42,9 @@ from simple_commands import help_handler
 from start_bot import start_bot
 from utils import display_name
 from utils import send_async, answer_async, error, TIMEOUT, user_is_creator_or_admin, user_is_creator, game_is_running
+import menu
+from games.go import go_commands
+from games import tictactoe, connectfour, rps, russian_roulette
 
 
 logging.basicConfig(
@@ -91,8 +94,8 @@ def new_game(update: Update, context: CallbackContext):
         game.owner.append(update.message.from_user.id)
         game.mode = DEFAULT_GAMEMODE
         send_async(context.bot, chat_id,
-                   text=_("Created a new game! Join the game with /join "
-                          "and start the game with /start"))
+                   text=_("Created a new game! Join the game with /uno_join "
+                          "and start the game with /uno_start"))
 
 
 @user_locale
@@ -122,7 +125,7 @@ def kill_game(update: Update, context: CallbackContext):
         except NoGameInChatError:
             send_async(context.bot, chat.id,
                        text=_("The game is not started yet. "
-                              "Join the game with /join and start the game with /start"),
+                              "Join the game with /uno_join and start the game with /uno_start"),
                        reply_to_message_id=update.message.message_id)
 
     else:
@@ -149,13 +152,13 @@ def join_game(update: Update, context: CallbackContext):
     except NoGameInChatError:
         send_async(context.bot, chat.id,
                    text=_("No game is running at the moment. "
-                          "Create a new game with /new"),
+                          "Create a new game with /uno"),
                    reply_to_message_id=update.message.message_id)
 
     except AlreadyJoinedError:
         send_async(context.bot, chat.id,
                    text=_("You already joined the game. Start the game "
-                          "with /start"),
+                          "with /uno_start"),
                    reply_to_message_id=update.message.message_id)
 
     except DeckEmptyError:
@@ -231,14 +234,14 @@ def kick_player(update: Update, context: CallbackContext):
     except (KeyError, IndexError):
             send_async(context.bot, chat.id,
                    text=_("No game is running at the moment. "
-                          "Create a new game with /new"),
+                          "Create a new game with /uno"),
                    reply_to_message_id=update.message.message_id)
             return
 
     if not game.started:
         send_async(context.bot, chat.id,
                    text=_("The game is not started yet. "
-                          "Join the game with /join and start the game with /start"),
+                          "Join the game with /uno_join and start the game with /uno_start"),
                    reply_to_message_id=update.message.message_id)
         return
 
@@ -267,7 +270,7 @@ def kick_player(update: Update, context: CallbackContext):
 
         else:
             send_async(context.bot, chat.id,
-                text=_("Please reply to the person you want to kick and type /kick again."),
+                text=_("Please reply to the person you want to kick and type /uno_kick again."),
                 reply_to_message_id=update.message.message_id)
             return
 
@@ -358,7 +361,7 @@ def start_game(update: Update, context: CallbackContext):
         except (KeyError, IndexError):
             send_async(context.bot, chat.id,
                        text=_("There is no game running in this chat. Create "
-                              "a new one with /new"))
+                              "a new one with /uno"))
             return
 
         if game.started:
@@ -366,7 +369,7 @@ def start_game(update: Update, context: CallbackContext):
 
         elif len(game.players) < MIN_PLAYERS:
             send_async(context.bot, chat.id,
-                       text=__("At least {minplayers} players must /join the game "
+                       text=__("At least {minplayers} players must /uno_join the game "
                               "before you can start it").format(minplayers=MIN_PLAYERS))
 
         else:
@@ -378,8 +381,8 @@ def start_game(update: Update, context: CallbackContext):
             choice = [[InlineKeyboardButton(text=_("Make your choice!"), switch_inline_query_current_chat='')]]
             first_message = (
                 __("First player: {name}\n"
-                   "Use /close to stop people from joining the game.\n"
-                   "Enable multi-translations with /enable_translations",
+                   "Use /uno_close to stop people from joining the game.\n"
+                   "Enable multi-translations with /uno_translations_on",
                    multi=game.translate)
                 .format(name=display_name(game.current_player.user)))
 
@@ -466,7 +469,7 @@ def open_game(update: Update, context: CallbackContext):
     if user.id in game.owner:
         game.open = True
         send_async(context.bot, chat.id, text=_("Opened the lobby. "
-                                        "New players may /join the game."))
+                                        "New players may /uno_join the game."))
         return
     else:
         send_async(context.bot, chat.id,
@@ -493,7 +496,7 @@ def enable_translations(update: Update, context: CallbackContext):
     if user.id in game.owner:
         game.translate = True
         send_async(context.bot, chat.id, text=_("Enabled multi-translations. "
-                                        "Disable with /disable_translations"))
+                                        "Disable with /uno_translations_off"))
         return
 
     else:
@@ -522,7 +525,7 @@ def disable_translations(update: Update, context: CallbackContext):
         game.translate = False
         send_async(context.bot, chat.id, text=_("Disabled multi-translations. "
                                         "Enable them again with "
-                                        "/enable_translations"))
+                                        "/uno_translations_on"))
         return
 
     else:
@@ -717,23 +720,38 @@ def reset_waiting_time(bot, player):
 
 
 # Add all handlers to the dispatcher and run the bot
+
+# Main menu - /start shows game selection
+from menu import show_menu
+dispatcher.add_handler(CommandHandler('start', show_menu, pass_args=True))
+
+# UNO handlers (prefixed with uno_)
 dispatcher.add_handler(InlineQueryHandler(reply_to_query))
 dispatcher.add_handler(ChosenInlineResultHandler(process_result, pass_job_queue=True))
-dispatcher.add_handler(CallbackQueryHandler(select_game))
-dispatcher.add_handler(CommandHandler('start', start_game, pass_args=True, pass_job_queue=True))
-dispatcher.add_handler(CommandHandler('new', new_game))
-dispatcher.add_handler(CommandHandler('kill', kill_game))
-dispatcher.add_handler(CommandHandler('join', join_game))
-dispatcher.add_handler(CommandHandler('leave', leave_game))
-dispatcher.add_handler(CommandHandler('kick', kick_player))
-dispatcher.add_handler(CommandHandler('open', open_game))
-dispatcher.add_handler(CommandHandler('close', close_game))
-dispatcher.add_handler(CommandHandler('enable_translations',
+dispatcher.add_handler(CallbackQueryHandler(select_game, pattern=r'^\-?\d+$'))
+dispatcher.add_handler(CommandHandler('uno', new_game))
+dispatcher.add_handler(CommandHandler('uno_start', start_game, pass_args=True, pass_job_queue=True))
+dispatcher.add_handler(CommandHandler('uno_kill', kill_game))
+dispatcher.add_handler(CommandHandler('uno_join', join_game))
+dispatcher.add_handler(CommandHandler('uno_leave', leave_game))
+dispatcher.add_handler(CommandHandler('uno_kick', kick_player))
+dispatcher.add_handler(CommandHandler('uno_open', open_game))
+dispatcher.add_handler(CommandHandler('uno_close', close_game))
+dispatcher.add_handler(CommandHandler('uno_translations_on',
                                       enable_translations))
-dispatcher.add_handler(CommandHandler('disable_translations',
+dispatcher.add_handler(CommandHandler('uno_translations_off',
                                       disable_translations))
-dispatcher.add_handler(CommandHandler('skip', skip_player))
-dispatcher.add_handler(CommandHandler('notify_me', notify_me))
+dispatcher.add_handler(CommandHandler('uno_skip', skip_player))
+dispatcher.add_handler(CommandHandler('uno_notify', notify_me))
+
+# Register all other game modules
+menu.register(dispatcher)
+go_commands.register(dispatcher)
+tictactoe.register(dispatcher)
+connectfour.register(dispatcher)
+rps.register(dispatcher)
+russian_roulette.register(dispatcher)
+
 simple_commands.register()
 settings.register()
 dispatcher.add_handler(MessageHandler(Filters.status_update, status_update))
