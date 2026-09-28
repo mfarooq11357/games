@@ -106,7 +106,7 @@ GAME_INFO = {
         "\U0001f6e9 <b>Vector Rush</b>\n\n"
         "A 3D flight run.\n\n"
         "Tap <b>Play in Telegram</b> to open it inside the chat.\n"
-        "Steer through the course and fire the phase dash when it is ready."
+        "Speed climbs as you fly. Touch a hurdle once and the run is over."
     ),
     'helix': (
         "\U0001f300 <b>Helix Smash</b>\n\n"

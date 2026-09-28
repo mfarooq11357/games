@@ -24,8 +24,8 @@ ARCADE_GAMES = {
         "slug": "racer",
         "title": "Vector Rush",
         "blurb": (
-            "Fly through the course, dodge obstacles, and use the phase dash "
-            "when it is charged."
+            "Fly through the course. Speed picks up as you go. "
+            "Touch a hurdle once and the run is over. Phase dash still breaks a hurdle."
         ),
     },
     "helix": {
