@@ -27,19 +27,42 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
+_ARCADE_FILE = os.path.join(os.path.dirname(__file__), "arcade", "index.html")
+
+
+def _load_arcade():
+    try:
+        with open(_ARCADE_FILE, "rb") as handle:
+            return handle.read()
+    except OSError:
+        return None
+
+
+_ARCADE_HTML = _load_arcade()
+
+
 class _HealthHandler(BaseHTTPRequestHandler):
+    def _send(self, status, body, content_type):
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if path in ("/arcade", "/arcade/", "/arcade/index.html"):
+            if not _ARCADE_HTML:
+                self._send(503, b"arcade unavailable", "text/plain")
+                return
+            self._send(200, _ARCADE_HTML, "text/html; charset=utf-8")
+            return
         if path not in ("/", "/health", "/keep-alive"):
             self.send_response(404)
             self.end_headers()
             return
-        body = b"ok"
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        self._send(200, b"ok", "text/plain")
 
     def log_message(self, format, *args):
         return

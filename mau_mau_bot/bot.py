@@ -44,7 +44,7 @@ from utils import display_name
 from utils import send_async, answer_async, error, TIMEOUT, user_is_creator_or_admin, user_is_creator, game_is_running
 import menu
 from games.go import go_commands
-from games import tictactoe, connectfour, rps, russian_roulette
+from games import tictactoe, connectfour, rps, russian_roulette, arcade
 
 
 logging.basicConfig(
@@ -751,6 +751,7 @@ tictactoe.register(dispatcher)
 connectfour.register(dispatcher)
 rps.register(dispatcher)
 russian_roulette.register(dispatcher)
+arcade.register(dispatcher)
 
 simple_commands.register()
 settings.register()

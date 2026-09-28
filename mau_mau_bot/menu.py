@@ -20,6 +20,13 @@ GAMES_MENU = [
         InlineKeyboardButton("\u270a Rock-Paper-Scissors", callback_data="menu;rps"),
         InlineKeyboardButton("\U0001f52b Russian Roulette", callback_data="menu;rr"),
     ],
+    [
+        InlineKeyboardButton("\U0001f40d Snake", callback_data="menu;snake"),
+        InlineKeyboardButton("\U0001f6e9 Vector Rush", callback_data="menu;rush"),
+    ],
+    [
+        InlineKeyboardButton("\U0001f300 Helix Smash", callback_data="menu;helix"),
+    ],
 ]
 
 
@@ -89,6 +96,24 @@ GAME_INFO = {
         "Take turns picking a chamber!\n\n"
         "<i>2 players. Don't hit the bullet!</i>"
     ),
+    'snake': (
+        "\U0001f40d <b>Snake</b>\n\n"
+        "A 3D snake that wraps around the board.\n\n"
+        "Tap <b>Play in Telegram</b> to open it inside the chat.\n"
+        "Swipe or use the arrows. Don't run into yourself."
+    ),
+    'rush': (
+        "\U0001f6e9 <b>Vector Rush</b>\n\n"
+        "A 3D flight run.\n\n"
+        "Tap <b>Play in Telegram</b> to open it inside the chat.\n"
+        "Steer through the course and fire the phase dash when it is ready."
+    ),
+    'helix': (
+        "\U0001f300 <b>Helix Smash</b>\n\n"
+        "A 3D tower run.\n\n"
+        "Tap <b>Play in Telegram</b> to open it inside the chat.\n"
+        "Rotate through the gaps and smash blocks with a charged fireball."
+    ),
 }
 
 
@@ -148,11 +173,18 @@ def menu_callback(update: Update, context: CallbackContext):
 
     info = GAME_INFO.get(game_key)
     if info:
-        back_button = [[InlineKeyboardButton("\u25c0 Back to Games", callback_data="menu;back")]]
+        if game_key in ("snake", "rush", "helix"):
+            from games.arcade import play_keyboard
+            chat_type = query.message.chat.type if query.message else "private"
+            markup = play_keyboard(game_key, chat_type)
+        else:
+            markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("\u25c0 Back to Games", callback_data="menu;back")]]
+            )
         query.edit_message_text(
             info,
             parse_mode=ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup(back_button)
+            reply_markup=markup
         )
     query.answer()
 
