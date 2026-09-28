@@ -16,12 +16,13 @@ RUN         --mount=type=cache,sharing=locked,target=/root/.cache,id=home-cache-
 
 COPY        --chown=nobody:nogroup . .
 
+RUN         mkdir -p /app/data && chown nobody:nogroup /app/data
+
 USER        nobody
 
 RUN         cd locales && \
             find . -maxdepth 2 -type d -name 'LC_MESSAGES' -exec ash -c 'msgfmt {}/unobot.po -o {}/unobot.mo' \;
 
-VOLUME      /app/data
 ENV         UNO_DB=/app/data/uno.sqlite3
 ENV         PYTHONUNBUFFERED=1
 
