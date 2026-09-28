@@ -23,5 +23,6 @@ RUN         cd locales && \
 
 VOLUME      /app/data
 ENV         UNO_DB=/app/data/uno.sqlite3
+ENV         PYTHONUNBUFFERED=1
 
 ENTRYPOINT  [ "python", "bot.py" ]

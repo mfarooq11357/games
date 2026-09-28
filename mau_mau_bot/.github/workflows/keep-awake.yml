@@ -1,0 +1,15 @@
+name: Keep games bot awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        run: curl -fsS --retry 8 --retry-all-errors --retry-delay 15 --max-time 180 "$BOT_HEALTH_URL"
+        env:
+          BOT_HEALTH_URL: ${{ vars.BOT_HEALTH_URL }}
