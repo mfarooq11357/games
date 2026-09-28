@@ -1,15 +1,17 @@
 const HEALTH_PATH = "/health";
 
+const DEFAULT_HEALTH_URL = "https://games-bot-8vhs.onrender.com/health";
+
 function healthUrl() {
   const configured = process.env.BOT_HEALTH_URL;
   if (configured) {
     return configured;
   }
   const base = process.env.BOT_URL;
-  if (!base) {
-    return "";
+  if (base) {
+    return base.replace(/\/$/, "") + HEALTH_PATH;
   }
-  return base.replace(/\/$/, "") + HEALTH_PATH;
+  return DEFAULT_HEALTH_URL;
 }
 
 module.exports = async function handler(req, res) {
